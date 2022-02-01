@@ -178,10 +178,13 @@ class Evaluation:
             os.makedirs(experiment_path, exist_ok=True)
             experiment.save(result_path)
 
-    def present(self):
+    def present(self, table_format: str = "simple"):
         """
         Present results.
         """
+
+        # pylint: disable=too-many-locals
+
         table = []
         sorted_datasets = sorted(
             list({experiment.dataset for experiment in self._experiments}),
@@ -231,7 +234,7 @@ class Evaluation:
                 row[i_col] = more_termcolor.colors.green(row[i_col])
 
             table.append(row)
-        print(tabulate(table, headers=header))
+        print(tabulate(table, headers=header, tablefmt=table_format))
 
 
 def keep(original: str, allowed: str = string.ascii_lowercase + string.digits) -> str:

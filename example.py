@@ -1,17 +1,3 @@
-# Classic Experiments
-
-Persistent and reproducible experimental pipelines for Machine Learning.
-
-## Installation
-
-```
-pip install git+git://github.com/jangop/classicexperiments
-```
-
-## Example Usage
-We want to compare several classifiers with respect to a number of datasets.
-We simply load the datasets and define a number of `Estimator` instances.
-```python
 import sklearn.ensemble
 import sklearn.neighbors
 import sklearn.neural_network
@@ -85,10 +71,3 @@ evaluation.run()
 
 # Present results.
 evaluation.present(table_format="github")
-```
-Results are automatically stored, and we end up with a tidy table.
-
-| Dataset    | 15-nn        | 23-nn        | Forest       | KernelSVM    | MLP          | Tree         |
-|------------|--------------|--------------|--------------|--------------|--------------|--------------|
-| Ionosphere | 0.81 ±0.0295 | 0.78 ±0.0349 | 0.91 ±0.0549 | 0.95 ±0.0321 | 0.90 ±0.0405 | 0.86 ±0.0491 |
-| Telescope  | 0.84 ±0.0051 | 0.84 ±0.0056 | 0.84 ±0.0050 | 0.87 ±0.0052 | 0.87 ±0.0050 | 0.82 ±0.0046 |

@@ -9,17 +9,17 @@ from classicexperiments import Estimator, Evaluation, Experiment
 
 class TrainingTest(unittest.TestCase):
     def test(self):
-        # Prepare dataset.
+        # Prepare datasets.
         datasets = [Ionosphere(), MagicGammaTelescope()]
 
         # Prepare estimators.
         knn3 = Estimator(
-            name="knn3",
+            name="3-nn",
             estimator_class=sklearn.neighbors.KNeighborsClassifier,
             parameters={"n_neighbors": 3},
         )
         knn5 = Estimator(
-            name="knn5",
+            name="5-nn",
             estimator_class=sklearn.neighbors.KNeighborsClassifier,
             parameters={"n_neighbors": 5},
         )

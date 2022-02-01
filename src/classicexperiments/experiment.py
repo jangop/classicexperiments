@@ -87,11 +87,7 @@ class Experiment:
         self._name = new_name
 
     def _construct_name(self):
-        name = "{dataset} {estimator} {parameters}".format(
-            dataset=self.dataset.short_name,
-            estimator=self.estimator.name,
-            parameters=self.estimator.parameters,
-        )
+        name = f"{self.dataset.short_name} {self.estimator.name} {self.estimator.parameters}"
         return name
 
     def run(self):

@@ -6,7 +6,7 @@ https://github.com/jangop/classicexperiments
 
 import pathlib
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 here = pathlib.Path(__file__).parent.resolve()
 
@@ -37,7 +37,16 @@ setup(
         "License :: OSI Approved :: The Unlicense (Unlicense)",
     ],
     python_requires=">=3.9, <4",
-    install_requires=["loguru", "scikit-learn", "numpy", "appdirs"],
+    install_requires=[
+        "loguru",
+        "scikit-learn",
+        "numpy",
+        "appdirs",
+        "tabulate",
+        "more-termcolor",
+        "classicdata",
+        "tqdm",
+    ],
     extras_require={
         "dev": ["check-manifest", "black", "pylint"],
         "test": ["coverage", "pytest", "black", "pylint"],

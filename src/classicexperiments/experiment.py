@@ -56,6 +56,7 @@ class Experiment:
     """
 
     def __init__(
+        # pylint: disable=too-many-arguments
         self,
         dataset: Dataset,
         estimator: Estimator,
@@ -63,17 +64,21 @@ class Experiment:
         parameters: dict,
         scaler: Optional[sklearn.base.TransformerMixin] = None,
     ):
-        self._dataset = dataset
-        self._estimator = estimator
-        self._estimation_function = estimation_function
-        self._parameters = parameters
-        self._scaler = scaler
+        self.dataset = dataset
+        self.estimator = estimator
+        self.estimation_function = estimation_function
+        self.parameters = parameters
+        self.scaler = scaler
+
+        self._name = None
+        self.results = None
 
     @property
     def name(self):
-        try:
-            self._name
-        except AttributeError:
+        """
+        Name of the experiment.
+        """
+        if self._name is None:
             self._name = self._construct_name()
         return self._name
 
@@ -81,51 +86,59 @@ class Experiment:
     def name(self, new_name):
         self._name = new_name
 
-    @property
-    def estimator(self):
-        return self._estimator
-
-    @property
-    def dataset(self):
-        return self._dataset
-
-    @property
-    def results(self):
-        return self._results
-
     def _construct_name(self):
         name = "{dataset} {estimator} {parameters}".format(
-            dataset=self._dataset.short_name,
-            estimator=self._estimator.name,
-            parameters=self._estimator.parameters,
+            dataset=self.dataset.short_name,
+            estimator=self.estimator.name,
+            parameters=self.estimator.parameters,
         )
         return name
 
     def run(self):
-        if self._scaler is not None:
+        """
+        Train the estimator on the dataset, and store the results.
+        :return:
+        """
+        if self.scaler is not None:
             pipeline = sklearn.pipeline.make_pipeline(
-                self._scaler, self._estimator.estimator_instance
+                self.scaler, self.estimator.estimator_instance
             )
         else:
-            pipeline = self._estimator.estimator_instance
+            pipeline = self.estimator.estimator_instance
 
-        self._results = self._estimation_function(
-            pipeline, self._dataset.points, self._dataset.labels, **self._parameters
+        self.results = self.estimation_function(
+            pipeline, self.dataset.points, self.dataset.labels, **self.parameters
         )
 
     def save(self, path):
-        np.save(path, self._results)
+        """
+        Store results.
+        :param path: Where results are stored.
+        """
+        np.save(path, self.results)
 
     def load(self, path):
-        self._results = np.load(path)
+        """
+        Load results.
+        :param path: Where results are stored.
+        """
+        self.results = np.load(path)
 
 
 class Evaluation:
+    """
+    Evaluate a number of experiments.
+    """
+
     def __init__(self, experiments, base_dir):
         self._experiments = experiments
         self._base_dir = base_dir
+        self._missing = None
 
     def _prepare(self):
+        """
+        Collect those experiments for which results still need to be computed.
+        """
         self._missing = []
         for experiment in self._experiments:
             experiment_path = os.path.join(self._base_dir, simplify(experiment.name))
@@ -136,9 +149,10 @@ class Evaluation:
                 self._missing.append(experiment)
 
     def run(self):
-        try:
-            self._missing
-        except AttributeError:
+        """
+        Compute results for experiments that still need them.
+        """
+        if self._missing is None:
             self._prepare()
         if self._missing:
             missing_datasets = list(
@@ -169,78 +183,82 @@ class Evaluation:
             experiment.save(result_path)
 
     def present(self):
-        mode = "plain-table"
-        if mode == "plain-list":
-            for experiment in self._experiments:
-                logger.info(
-                    "Mean cross validation score for {} on {}: {:.2f} ±{:.4f}".format(
-                        experiment.estimator.name,
-                        experiment.dataset.short_name,
-                        np.mean(experiment.results),
-                        np.std(experiment.results),
-                    )
-                )
-        elif mode == "plain-table":
-            table = []
-            datasets = sorted(
-                list({experiment.dataset for experiment in self._experiments}),
-                key=operator.attrgetter("short_name"),
-            )
-            estimators = sorted(
-                list({experiment.estimator for experiment in self._experiments}),
-                key=operator.attrgetter("name"),
-            )
-            for estimator in estimators:
-                estimator.name = estimator.name.replace("Early Stopping", "ES")
-                estimator.name = estimator.name.replace("Reg", "R")
-                estimator.name = estimator.name.replace("LR", "L")
-                estimator.name = estimator.name.replace(" ", "")
+        """
+        Present results.
+        """
+        table = []
+        sorted_datasets = sorted(
+            list({experiment.dataset for experiment in self._experiments}),
+            key=operator.attrgetter("short_name"),
+        )
+        sorted_estimators = sorted(
+            list({experiment.estimator for experiment in self._experiments}),
+            key=operator.attrgetter("name"),
+        )
+        for estimator in sorted_estimators:
+            estimator.name = estimator.name.replace("Early Stopping", "ES")
+            estimator.name = estimator.name.replace("Reg", "R")
+            estimator.name = estimator.name.replace("LR", "L")
+            estimator.name = estimator.name.replace(" ", "")
 
-            header = ["Dataset"] + [estimator.name for estimator in estimators]
-            for dataset in datasets:
-                row = [dataset.short_name]
-                best_cols = []
-                best_mean = -1
-                for i_col, estimator in enumerate(estimators):
-                    experiment = [
-                        experiment
-                        for experiment in self._experiments
-                        if experiment.dataset is dataset
-                        and experiment.estimator is estimator
-                    ][0]
-                    try:
-                        mean = np.mean(experiment.results)
-                        std = np.std(experiment.results)
+        header = ["Dataset"] + [estimator.name for estimator in sorted_estimators]
+        for dataset in sorted_datasets:
+            row = [dataset.short_name]
+            best_cols = []
+            best_mean = -1
+            for i_col, estimator in enumerate(sorted_estimators):
+                experiment = [
+                    experiment
+                    for experiment in self._experiments
+                    if experiment.dataset is dataset
+                    and experiment.estimator is estimator
+                ][0]
+                try:
+                    mean = np.mean(experiment.results)
+                    std = np.std(experiment.results)
 
-                    except AttributeError:
-                        value = "nan"
-                    else:
-                        value = f"{mean:.2f} ±{std:.4f}"
+                except AttributeError:
+                    value = "nan"
+                else:
+                    value = f"{mean:.2f} ±{std:.4f}"
 
-                        if mean > best_mean:
-                            best_mean = mean
-                            best_cols = [i_col]
-                        elif mean == best_mean:
-                            best_cols.append(i_col)
+                    if mean > best_mean:
+                        best_mean = mean
+                        best_cols = [i_col]
+                    elif mean == best_mean:
+                        best_cols.append(i_col)
 
-                    row += [value]
+                row += [value]
 
-                for i_col in best_cols:
-                    i_col += 1
-                    row[i_col] = more_termcolor.colors.green(row[i_col])
+            for i_col in best_cols:
+                i_col += 1
+                row[i_col] = more_termcolor.colors.green(row[i_col])
 
-                table.append(row)
-            print(tabulate(table, headers=header))
+            table.append(row)
+        print(tabulate(table, headers=header))
 
 
-def keep(original, allowed=string.ascii_lowercase + string.digits):
+def keep(original: str, allowed: str = string.ascii_lowercase + string.digits) -> str:
+    """
+    Discard characters from strings.
+
+    :param original: String from which characters get removed.
+    :param allowed: String with all characters that are kept.
+    :return: String without discarded characters.
+    """
     new = ""
-    for c in original:
-        if c in allowed:
-            new += c
+    for character in original:
+        if character in allowed:
+            new += character
     return new
 
 
-def simplify(original):
+def simplify(original: str) -> str:
+    """
+    Simplifies a string by replacing uppercase characters and whitespace,
+    and removing non-ascii characters.
+    :param original: Original string.
+    :return: Simplified string.
+    """
     simple = "-".join([keep(piece) for piece in original.lower().split()])
     return simple

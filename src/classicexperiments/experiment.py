@@ -97,7 +97,7 @@ class Experiment:
         name = "{dataset} {estimator} {parameters}".format(
             dataset=self._dataset.short_name,
             estimator=self._estimator.name,
-            parameters=self._estimator._parameters,
+            parameters=self._estimator.parameters,
         )
         return name
 

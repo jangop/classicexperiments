@@ -5,6 +5,7 @@ Experiments and evaluations.
 import operator
 import os
 import string
+from dataclasses import dataclass
 from typing import Callable, Optional, Type
 
 import numpy as np
@@ -189,23 +190,54 @@ class Evaluation:
         Present results.
         """
 
-        def reduce(results: np.ndarray) -> str:
-            try:
-                mean = np.mean(results)
-                std = np.std(results)
-            except AttributeError:
-                representation = "nan"
-            else:
-                representation = f"{mean:.2f} ±{std:.4f}"
-            return representation
+        @dataclass(order=True)
+        class ReducedResult:
+            """
+            Reduces results; merely the mean and standard variance.
+            """
+
+            mean: float
+            std: float
+            highlight: bool = False
+
+            @classmethod
+            def from_results(cls, results: np.ndarray) -> "ReducedResult":
+                """
+                Reduces results by computing the mean and standard variance.
+                """
+                return ReducedResult(np.mean(results).item(), np.std(results).item())
+
+            def __str__(self) -> str:
+                representation = f"{self.mean:.2f} ±{self.std:.4f}"
+                if self.highlight:
+                    representation = f"**{representation}**"
+                return representation
+
+        def highlight(row: dict[ReducedResult]):
+            """
+            Determines and highlights the highest values.
+            Modifies in place.
+
+            :param row: The dictionary whose highest value(s) will be highlighted.
+            :return: The dictionary with its highest value(s) highlighted.
+            """
+            best = max(row.values())
+            for value in row.values():
+                if value == best:
+                    value.highlight = True
+            return row
 
         data = [
             {"Dataset": dataset.short_name}
-            | {
-                experiment.estimator.name: reduce(experiment.results)
-                for experiment in self._experiments
-                if experiment.dataset is dataset
-            }
+            | highlight(
+                {
+                    experiment.estimator.name: ReducedResult.from_results(
+                        experiment.results
+                    )
+                    for experiment in self._experiments
+                    if experiment.dataset is dataset
+                }
+            )
             for dataset in sorted(
                 list(self.datasets), key=operator.attrgetter("short_name")
             )

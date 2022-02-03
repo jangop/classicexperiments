@@ -27,44 +27,38 @@ datasets = [
 ]
 
 # Prepare estimators.
-estimators = (
-    [
-        Estimator(
-            name=f"{k}-nn",
-            estimator_class=sklearn.neighbors.KNeighborsClassifier,
-            parameters={"n_neighbors": k},
-        )
-        for k in (15, 23)
-    ]
-    + [
-        Estimator(
-            name="Tree",
-            estimator_class=sklearn.tree.DecisionTreeClassifier,
-            parameters={},
-        )
-    ]
-    + [
-        Estimator(
-            name="Forest",
-            estimator_class=sklearn.ensemble.AdaBoostClassifier,
-            parameters={},
-        )
-    ]
-    + [
-        Estimator(
-            name="MLP",
-            estimator_class=sklearn.neural_network.MLPClassifier,
-            parameters={},
-        )
-    ]
-    + [
-        Estimator(
-            name="KernelSVM",
-            estimator_class=sklearn.svm.SVC,
-            parameters={"kernel": "sigmoid"},
-        )
-    ]
-)
+estimators = [
+    Estimator(
+        name="Dummy",
+        estimator_class=sklearn.dummy.DummyClassifier,
+        parameters={},
+    ),
+    Estimator(
+        name="5-nn",
+        estimator_class=sklearn.neighbors.KNeighborsClassifier,
+        parameters={"n_neighbors": 5},
+    ),
+    Estimator(
+        name="Tree",
+        estimator_class=sklearn.tree.DecisionTreeClassifier,
+        parameters={},
+    ),
+    Estimator(
+        name="Forest",
+        estimator_class=sklearn.ensemble.AdaBoostClassifier,
+        parameters={},
+    ),
+    Estimator(
+        name="MLP",
+        estimator_class=sklearn.neural_network.MLPClassifier,
+        parameters={},
+    ),
+    Estimator(
+        name="KernelSVM",
+        estimator_class=sklearn.svm.SVC,
+        parameters={"kernel": "sigmoid"},
+    ),
+]
 
 # Prepare experiments.
 experiments = [

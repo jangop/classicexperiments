@@ -7,7 +7,6 @@ import os
 import string
 from typing import Callable, Optional, Type
 
-import more_termcolor
 import numpy as np
 import sklearn.pipeline
 from classicdata.dataset import Dataset
@@ -131,6 +130,13 @@ class Evaluation:
         self._base_dir = base_dir
         self._missing = None
 
+    @property
+    def datasets(self) -> set[Dataset]:
+        """
+        Every dataset that appears in at least one experiment.
+        """
+        return {experiment.dataset for experiment in self._experiments}
+
     def _prepare(self):
         """
         Collect those experiments for which results still need to be computed.
@@ -183,58 +189,29 @@ class Evaluation:
         Present results.
         """
 
-        # pylint: disable=too-many-locals
+        def reduce(results: np.ndarray) -> str:
+            try:
+                mean = np.mean(results)
+                std = np.std(results)
+            except AttributeError:
+                representation = "nan"
+            else:
+                representation = f"{mean:.2f} ±{std:.4f}"
+            return representation
 
-        table = []
-        sorted_datasets = sorted(
-            list({experiment.dataset for experiment in self._experiments}),
-            key=operator.attrgetter("short_name"),
-        )
-        sorted_estimators = sorted(
-            list({experiment.estimator for experiment in self._experiments}),
-            key=operator.attrgetter("name"),
-        )
-        for estimator in sorted_estimators:
-            estimator.name = estimator.name.replace("Early Stopping", "ES")
-            estimator.name = estimator.name.replace("Reg", "R")
-            estimator.name = estimator.name.replace("LR", "L")
-            estimator.name = estimator.name.replace(" ", "")
+        data = [
+            {"Dataset": dataset.short_name}
+            | {
+                experiment.estimator.name: reduce(experiment.results)
+                for experiment in self._experiments
+                if experiment.dataset is dataset
+            }
+            for dataset in sorted(
+                list(self.datasets), key=operator.attrgetter("short_name")
+            )
+        ]
 
-        header = ["Dataset"] + [estimator.name for estimator in sorted_estimators]
-        for dataset in sorted_datasets:
-            row = [dataset.short_name]
-            best_cols = []
-            best_mean = -1
-            for i_col, estimator in enumerate(sorted_estimators):
-                experiment = [
-                    experiment
-                    for experiment in self._experiments
-                    if experiment.dataset is dataset
-                    and experiment.estimator is estimator
-                ][0]
-                try:
-                    mean = np.mean(experiment.results)
-                    std = np.std(experiment.results)
-
-                except AttributeError:
-                    value = "nan"
-                else:
-                    value = f"{mean:.2f} ±{std:.4f}"
-
-                    if mean > best_mean:
-                        best_mean = mean
-                        best_cols = [i_col]
-                    elif mean == best_mean:
-                        best_cols.append(i_col)
-
-                row += [value]
-
-            for i_col in best_cols:
-                i_col += 1
-                row[i_col] = more_termcolor.colors.green(row[i_col])
-
-            table.append(row)
-        print(tabulate(table, headers=header, tablefmt=table_format))
+        print(tabulate(data, headers="keys", tablefmt=table_format))
 
 
 def keep(original: str, allowed: str = string.ascii_lowercase + string.digits) -> str:

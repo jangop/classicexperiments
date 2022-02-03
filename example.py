@@ -3,12 +3,28 @@ import sklearn.neighbors
 import sklearn.neural_network
 import sklearn.preprocessing
 import sklearn.tree
-from classicdata import Ionosphere, MagicGammaTelescope
+from classicdata import (
+    USPS,
+    ImageSegmentation,
+    Ionosphere,
+    LetterRecognition,
+    MagicGammaTelescope,
+    PenDigits,
+    RobotNavigation,
+)
 
 from classicexperiments import Estimator, Evaluation, Experiment
 
 # Prepare datasets.
-datasets = [Ionosphere(), MagicGammaTelescope()]
+datasets = [
+    Ionosphere(),
+    LetterRecognition(),
+    MagicGammaTelescope(),
+    PenDigits(),
+    RobotNavigation(),
+    ImageSegmentation(),
+    USPS(),
+]
 
 # Prepare estimators.
 estimators = (

@@ -206,14 +206,19 @@ class Evaluation:
                 )
 
         for experiment in tqdm(self._missing, desc="Running experiments"):
-            logger.info(
-                f"Running {experiment.dataset.short_name}: {experiment.estimator.name}..."
-            )
-            experiment.run()
-            experiment_path = os.path.join(self._base_dir, simplify(experiment.name))
-            result_path = os.path.join(experiment_path, "result.npy")
-            os.makedirs(experiment_path, exist_ok=True)
-            experiment.save(result_path)
+            try:
+                logger.info(
+                    f"Running {experiment.dataset.short_name}: {experiment.estimator.name}..."
+                )
+                experiment.run()
+                experiment_path = os.path.join(
+                    self._base_dir, simplify(experiment.name)
+                )
+                result_path = os.path.join(experiment_path, "result.npy")
+                os.makedirs(experiment_path, exist_ok=True)
+                experiment.save(result_path)
+            except KeyboardInterrupt:
+                break
 
     def present(self, table_format: str = "simple"):
         """

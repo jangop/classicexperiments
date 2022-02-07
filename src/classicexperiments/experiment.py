@@ -6,7 +6,7 @@ import operator
 import os
 import string
 import warnings
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable, Optional, Type, Union
 
 import numpy as np
@@ -227,15 +227,21 @@ class Evaluation:
             """
 
             mean: float
-            std: float
-            highlight: bool = False
+            std: float = field(compare=False)
+            highlight: bool = field(default=False, compare=False)
 
             @classmethod
             def from_results(cls, results: np.ndarray) -> "ReducedResult":
                 """
                 Reduces results by computing the mean and standard variance.
                 """
-                return ReducedResult(np.mean(results).item(), np.std(results).item())
+                try:
+                    result = ReducedResult(
+                        np.mean(results).item(), np.std(results).item()
+                    )
+                except TypeError:
+                    result = ReducedResult(np.nan, np.nan)
+                return result
 
             def __str__(self) -> str:
                 representation = f"{self.mean:.2f} ±{self.std:.4f}"

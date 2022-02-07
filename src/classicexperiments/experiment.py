@@ -1,10 +1,11 @@
 """
 Experiments and evaluations.
 """
-
+import inspect
 import operator
 import os
 import string
+import warnings
 from dataclasses import dataclass
 from typing import Callable, Optional, Type
 
@@ -17,6 +18,12 @@ from tqdm import tqdm
 
 logger.remove()
 logger.add(lambda msg: tqdm.write(msg, end=""), colorize=True)
+
+
+class ReproducibilityWarning(UserWarning):
+    """
+    Reminder to fix seeds.
+    """
 
 
 class Estimator:
@@ -40,6 +47,8 @@ class Estimator:
 
         self._estimator_instance = None
 
+        self.check_reproducibility()
+
     @property
     def estimator_instance(self) -> sklearn.base.BaseEstimator:
         """
@@ -48,6 +57,22 @@ class Estimator:
         if self._estimator_instance is None:
             self._estimator_instance = self.estimator_class(**self.parameters)
         return self._estimator_instance
+
+    def check_reproducibility(self):
+        """
+        Emits a warning if the available parameters and the parameters actually set indicate
+        that the estimator makes use of a random seed, without it being defined.
+        """
+        signature = inspect.signature(self.estimator_class)
+        rnd_indicators = ["random_state", "seed", "random_seed"]
+        for indicator in rnd_indicators:
+            if indicator in signature.parameters and indicator not in self.parameters:
+                warnings.warn(
+                    f"{self.name} {self.estimator_class} has {indicator} amongst its parameters, "
+                    f"which indicates random number generation. However, no value for {indicator} "
+                    f"is passed. Results will probably not be reproducible.",
+                    ReproducibilityWarning,
+                )
 
 
 class Experiment:

@@ -14,7 +14,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="classicexperiments",
-    version="0.1.0-alpha1",
+    version="0.1.0-alpha2",
     author="Jan Philip Göpfert",
     author_email="janphilip@gopfert.eu",
     description="Persistent and reproducible experimental pipelines for Machine Learning",
@@ -36,7 +36,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "License :: OSI Approved :: The Unlicense (Unlicense)",
     ],
-    python_requires=">=3.9, <4",
+    python_requires="~=3.9",
     install_requires=[
         "loguru",
         "scikit-learn",

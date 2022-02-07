@@ -168,7 +168,7 @@ class Evaluation:
         """
         return {experiment.dataset for experiment in self._experiments}
 
-    def _prepare(self):
+    def prepare(self):
         """
         Collect those experiments for which results still need to be computed.
         """
@@ -186,7 +186,7 @@ class Evaluation:
         Compute results for experiments that still need them.
         """
         if self._missing is None:
-            self._prepare()
+            self.prepare()
         if self._missing:
             missing_datasets = list(
                 {experiment.dataset for experiment in self._missing}

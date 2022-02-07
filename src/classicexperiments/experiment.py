@@ -7,7 +7,7 @@ import os
 import string
 import warnings
 from dataclasses import dataclass
-from typing import Callable, Optional, Type
+from typing import Callable, Optional, Type, Union
 
 import numpy as np
 import sklearn.pipeline
@@ -38,7 +38,12 @@ class Estimator:
     def __init__(
         self,
         name: str,
-        estimator_class: Type[sklearn.base.BaseEstimator],
+        estimator_class: Union[
+            Type[sklearn.base.BaseEstimator],
+            Callable[..., sklearn.base.BaseEstimator],
+            Type[sklearn.pipeline.Pipeline],
+            Callable[..., sklearn.base.BaseEstimator],
+        ],
         parameters: dict,
     ):
         self.name = name

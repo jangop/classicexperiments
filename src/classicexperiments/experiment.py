@@ -205,7 +205,9 @@ class Evaluation:
                     f'{dataset_name} lacks results for {", ".join(estimator_names)}'
                 )
 
-        for experiment in tqdm(self._missing, desc="Running experiments"):
+        for experiment in tqdm(
+            self._missing, desc="Running experiments", dynamic_ncols=True
+        ):
             try:
                 logger.info(
                     f"Running {experiment.dataset.short_name}: {experiment.estimator.name}..."

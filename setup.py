@@ -49,6 +49,6 @@ setup(
     ],
     extras_require={
         "dev": ["check-manifest", "black", "pylint"],
-        "test": ["coverage", "pytest", "black", "pylint", "pytest-cov"],
+        "test": ["coverage", "pytest", "black", "pylint"],
     },
 )

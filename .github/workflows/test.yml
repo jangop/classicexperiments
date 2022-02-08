@@ -1,0 +1,35 @@
+name: Lint and Test
+
+on: [ push, pull_request ]
+
+jobs:
+  black:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - uses: psf/black@stable
+  pylint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: pip install .[test]
+      - run: pylint classicexperiments
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: pip install .[test]
+      - run: pytest
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: pip install -e .[test]
+      - run: coverage run --source src -m pytest
+      - run: coverage xml
+      - name: codecov
+        uses: codecov/codecov-action@v2
